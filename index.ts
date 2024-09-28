@@ -4,12 +4,15 @@ import Database from 'better-sqlite3';
 import cors from 'cors';
 import axios from 'axios';
 import bodyParser from 'body-parser';
-
+import {parkiMiejskie, ParkiKieszonkowe} from './parks'
 dotenv.config();
 
 
 const app = express();
 const port = process.env.PORT || 3000;
+const axiosInstance = axios.create({
+    timeout: 10000, // Set timeout to 10 seconds or more as needed
+});
 
 app.use(bodyParser.json());
 
@@ -84,15 +87,21 @@ const getTreeCategoryData = () => {
 
 
 const fetchParkData = async () => {
-    console.log('park!!!!')
-
     try {
         console.log('park2!!!!')
 
-        // Fetch data from APIs
-        const parksResponse = await axios.get('https://api.um.krakow.pl/opendata-srodowisko-parki-miejskie/v1/parki-miejskie-powierzchnia');
-        const pocketParksResponse = await axios.get('https://api.um.krakow.pl/opendata-srodowisko-parki-kieszonkowe/v1/parki-kieszonkowe-powierzchnia');
-        console.log('park3!!!!')
+        let parksResponse
+        let pocketParksResponse
+        try {
+            const res1 = await axiosInstance.get('https://api.um.krakow.pl/opendata-srodowisko-parki-miejskie/v1/parki-miejskie-powierzchnia');
+            const res2 = await axiosInstance.get('https://api.um.krakow.pl/opendata-srodowisko-parki-kieszonkowe/v1/parki-kieszonkowe-powierzchnia');
+
+            parksResponse = res1.data
+            pocketParksResponse = res2.data
+        } catch (e) {
+            parksResponse = parkiMiejskie
+            pocketParksResponse = ParkiKieszonkowe
+        }
 
         // Map parks data
         const parksData = parksResponse.data.value.map((park: any) => ({
@@ -129,8 +138,6 @@ const fetchParkData = async () => {
     }
 };
 
-console.log('here!!!!')
-console.log('here!!!!')
 fetchParkData();
 
 
