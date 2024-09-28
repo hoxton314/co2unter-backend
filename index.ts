@@ -223,7 +223,7 @@ const emissionFactors: EmissionFactors = {
     },
 };
 
-app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+const getEmissions = (req: any) => {
     const data: any = req.body;
 
     let allEmissions = 0;
@@ -266,16 +266,26 @@ app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res:
         const smallTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Small Seedling').co2_absorbed_kgs
 
         // Send the response back including total emissions and trees required
-        res.send({
+        return {
             oldTreesAbsorption: allEmissions * 1000 / oldTreeAbsorption,
             mediumTreeAbsorption: allEmissions * 1000 / mediumTreeAbsorption,
             smallTreeAbsorption: allEmissions * 1000 / smallTreeAbsorption,
             totalEmissions: allEmissions, // in tons
-        });
+        }
     } catch (error) {
         console.error('Error fetching tree data:', error);
-        res.status(500).json({ error: 'Error calculating tree absorption' });
+        return { error: 'Error calculating tree absorption' }
     }
+}
+
+app.get('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+    const response = getEmissions(req)
+    res.send(response)
+});
+
+app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+    const response = getEmissions(req)
+    res.send(response)
 });
 
 app.get('/trees', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
