@@ -104,6 +104,8 @@ const fetchParkData = async () => {
         }
 
         // Map parks data
+        console.log(parksResponse)
+        console.log(pocketParksResponse)
         const parksData = parksResponse.value.map((park: any) => ({
             name: park.Nazwa,
             area: park.Powierzchnia_ha,
