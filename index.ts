@@ -128,7 +128,7 @@ const fetchParkData = async () => {
 
 
 // Call the fetch function
-//fetchParkData();
+fetchParkData();
 
 app.get('/', (_req: Request, _res: Response) => {
     _res.send('Testowa aplikacja na hackaton!');
