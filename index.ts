@@ -272,6 +272,13 @@ app.get('/trees', async (req: Request<{}, {}, EmissionInput>, res: Response) => 
     })
 });
 
+app.get('/parks', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+    const parks: any[] = db.prepare('SELECT name, area, co2_absorbed_kgs FROM parks').all();
+    res.json({
+        parks: parks,
+    })
+});
+
 app.use((_req: Request, res: Response) => {
     res.status(404).send("Not found");
 });
