@@ -177,7 +177,6 @@ const emissionFactors: EmissionFactors = {
         rarely: 0.2,
         occasionally: 0.6,
         regularly: 3,
-        custom: 0, // Custom will be handled below
     },
     flyingAmount: {
         domestic: 0.1,
@@ -203,7 +202,7 @@ const emissionFactors: EmissionFactors = {
         regularly: 87500,
         custom: 0,
     },
-    housing: {
+    household: {
         studio: 2,
         oneBedroom: 2.75,
         twoBedroom: 3.5,
@@ -229,7 +228,7 @@ const getEmissions = (req: any) => {
     let allEmissions = 0;
 
     // housing emissions
-    const emissionsHousing = (data.housing && data.inhabitants) ? emissionFactors.housing[data.housing] / data.inhabitants : 0;
+    const emissionsHousing = (data.household && data.inhabitants) ? emissionFactors.housing[data.household] / data.inhabitants : 0;
     const emissionsElectricity = data.electricityUsage ? (data.electricityUsage * 0.72 * 365 / 1000) : 0;
     const emissionsDiet = data.diet ? emissionFactors.diet[data.diet] : 0;
     const emissionsShopping = data.shopping ? emissionFactors.shopping[data.shopping] : 0;
