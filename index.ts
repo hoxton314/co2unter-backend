@@ -147,6 +147,7 @@ type EmissionFactors = {
     };
 };
 
+
 const emissionFactors: EmissionFactors = {
     flyingHabit: {
         rarely: 0.2,
