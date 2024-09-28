@@ -84,6 +84,8 @@ const getTreeCategoryData = () => {
 
 
 const fetchParkData = async () => {
+    console.log('park!!!!')
+
     try {
 
         // Fetch data from APIs
@@ -124,6 +126,10 @@ const fetchParkData = async () => {
         console.error('Error fetching or inserting park data:', error);
     }
 };
+
+console.log('here!!!!')
+console.log('here!!!!')
+fetchParkData();
 
 
 app.get('/', (_req: Request, _res: Response) => {
@@ -280,6 +286,5 @@ app.use((_req: Request, res: Response) => {
 });
 
 app.listen(port, () => {
-    fetchParkData();
     console.log(`[server]: Server is running at PORT: ${port}`);
 });
