@@ -1040,3 +1040,10 @@ export const Events = {
         }
     ]
 }
+
+export const TransportShare = {
+    publicTransport: 40,
+    cars: 44,
+    bike: 4,
+    walk: 12,
+}

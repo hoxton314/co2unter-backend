@@ -4,7 +4,7 @@ import Database from 'better-sqlite3';
 import cors from 'cors';
 import axios from 'axios';
 import bodyParser from 'body-parser';
-import {parkiMiejskie, ParkiKieszonkowe, Events} from './parks'
+import {parkiMiejskie, ParkiKieszonkowe, Events, TransportShare} from './parks'
 dotenv.config();
 
 
@@ -210,6 +210,7 @@ const emissionFactors: EmissionFactors = {
         walk: 0,
         cycle: 0,
         publicTransport: 0.1,
+        carPooling: 0.2,
         car: 0.6,
     },
     otherCarUsage: {
@@ -263,14 +264,6 @@ const getEmissions = (req: any) => {
             emissionFactors.flyingAmount.intercontinental * data.flyingAmount.intercontinental;
     }
 
-    console.log(emissionsHousing)
-    console.log(emissionsElectricity)
-    console.log(emissionsDiet)
-    console.log(emissionsShopping)
-    console.log(emissionsCommute)
-    console.log(emissionsOtherCarUsage)
-    console.log(emissionFlights)
-
     allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights;
 
     try {
@@ -285,7 +278,7 @@ const getEmissions = (req: any) => {
         return {
             oldTreesAbsorption: allEmissions * 1000 / oldTreeAbsorption,
             mediumTreeAbsorption: allEmissions * 1000 / mediumTreeAbsorption,
-            smallTreeAbsorption: allEmissions * 1000 / smallTreeAbsorption,
+            seedlingAbsorption: allEmissions * 1000 / smallTreeAbsorption,
             totalEmissions: allEmissions, // in tons
         }
     } catch (error) {
@@ -314,7 +307,73 @@ app.get('/parks', async (req: Request<{}, {}, EmissionInput>, res: Response) => 
 });
 
 
-app.get('/events', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+app.get('/sectors', async (req: Request, res: Response) => {
+    const population = 820000
+    // Calculate the number of people using each transport method
+    const peopleUsingPublicTransport = (population * TransportShare.publicTransport) / 100;
+    const peopleUsingCars = (population * TransportShare.cars) / 100;
+    const peopleUsingBikes = (population * TransportShare.bike) / 100;
+    const peopleWalking = (population * TransportShare.walk) / 100;
+
+    const treeAbsorptionRates: any[] = db.prepare('SELECT name, co2_absorbed_kgs FROM trees_absorption').all();
+
+    const oldTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Old Tree').co2_absorbed_kgs
+    const mediumTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Medium Tree').co2_absorbed_kgs
+    const smallTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Small Seedling').co2_absorbed_kgs
+
+    // Calculate total emissions for each transport method
+    const totalEmissions = [
+        {
+            method: 'Public Transport',
+            sharePercent: 40,
+            emissions: peopleUsingPublicTransport * emissionFactors.dailyCommute.publicTransport,
+        },
+        {
+            method: 'Cars',
+            sharePercent: 44,
+            emissions: peopleUsingCars * emissionFactors.dailyCommute.car,
+        },
+        {
+            method: 'Bikes',
+            sharePercent: 4,
+            emissions: peopleUsingBikes * emissionFactors.dailyCommute.cycle,
+        },
+        {
+            method: 'Walking',
+            sharePercent: 12,
+            emissions: peopleWalking * emissionFactors.dailyCommute.walk,
+        },
+    ]
+
+    const totalEmissionsCount = totalEmissions.reduce((sum, transport) => sum + transport.emissions, 0);
+
+
+    // uslugi
+
+    const hotelEmissions = population * 10
+    const disposableEmissions = population * 0.5
+    const shoppingEmissions = population * 1
+
+    const yearlyServicesEmission = [
+        {
+            service: 'Hotel Sleeping',
+            averageFrequency: 'Twice a year',
+            emissions: 2 * hotelEmissions,
+        },
+        {
+            method: 'Disposable Packaging',
+            averageFrequency: 'Twice a week',
+            emissions: 2 * 50 * disposableEmissions,
+        },
+        {
+            method: 'Shopping',
+            averageFrequency: 'Once a week',
+            emissions: 50 * shoppingEmissions,
+        },
+    ]
+    const serviceEmissionCount = yearlyServicesEmission.reduce((sum, transport) => sum + transport.emissions, 0);
+
+
     const events: any[] = db.prepare('SELECT name, date, location, co2_emissions FROM events').all();
     const parks: any[] = db.prepare('SELECT name, area, co2_absorbed_tons FROM parks').all();
 
@@ -341,8 +400,37 @@ app.get('/events', async (req: Request<{}, {}, EmissionInput>, res: Response) =>
         };
     });
 
+    const eventsCount = extraEvents.reduce((sum, event) => sum + event.co2_emissions, 0);
+
+
     res.json({
-        events: extraEvents,
+        transport: {
+            totalEmissions: {
+                oldTreesAbsorption: totalEmissionsCount * 1000 / oldTreeAbsorption,
+                mediumTreeAbsorption: totalEmissionsCount * 1000 / mediumTreeAbsorption,
+                seedlingAbsorption: totalEmissionsCount * 1000 / smallTreeAbsorption,
+                totalEmissions: totalEmissionsCount, // in tons
+            },
+            emissionsByMean: totalEmissions,
+        },
+        services: {
+            totalEmissions: {
+                oldTreesAbsorption: serviceEmissionCount * 1000 / oldTreeAbsorption,
+                mediumTreeAbsorption: serviceEmissionCount * 1000 / mediumTreeAbsorption,
+                seedlingAbsorption: serviceEmissionCount * 1000 / smallTreeAbsorption,
+                totalEmissions: serviceEmissionCount, // in tons
+            },
+            emissionsByService: yearlyServicesEmission,
+        },
+        events: {
+            totalEmissions: {
+                oldTreesAbsorption: eventsCount * 1000 / oldTreeAbsorption,
+                mediumTreeAbsorption: eventsCount * 1000 / mediumTreeAbsorption,
+                seedlingAbsorption: eventsCount * 1000 / smallTreeAbsorption,
+                totalEmissions: eventsCount, // in tons
+            },
+            events: extraEvents,
+        }
     });
 });
 
