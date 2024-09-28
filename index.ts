@@ -10,7 +10,6 @@ app.get('/', (_req: Request, _res: Response) => {
     _res.send('Express + TypeScript Server');
 });
 
-
 app.use((_req: Request, res: Response) => {
     res.status(404).send("Not found");
 });
