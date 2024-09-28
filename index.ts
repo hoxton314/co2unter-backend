@@ -229,17 +229,18 @@ const getEmissions = (req: any) => {
     let allEmissions = 0;
 
     // housing emissions
-    const emissionsHousing = emissionFactors.housing[data.housing] / data.inhabitants;
-    const emissionsElectricity = data.electricityUsage * 0.72 * 365 / 1000;
-    const emissionsDiet = emissionFactors.diet[data.diet];
-    const emissionsShopping = emissionFactors.shopping[data.shopping];
-    const emissionsCommute = emissionFactors.dailyCommute[data.dailyCommute];
-    const emissionsOtherCarUsage = data.otherCarUsage * 50 * emissionFactors.carType[data.carType] / 100000;
-    const emissionFlights = emissionFactors.flyingHabit[data.flyingHabit];
+    const emissionsHousing = (data.housing && data.inhabitants) ? emissionFactors.housing[data.housing] / data.inhabitants : 0;
+    const emissionsElectricity = data.electricityUsage ? (data.electricityUsage * 0.72 * 365 / 1000) : 0;
+    const emissionsDiet = data.diet ? emissionFactors.diet[data.diet] : 0;
+    const emissionsShopping = data.shopping ? emissionFactors.shopping[data.shopping] : 0;
+    const emissionsCommute = data.dailyCommute ? emissionFactors.dailyCommute[data.dailyCommute] : 0;
+    const emissionsOtherCarUsage = (data.carType && data.otherCarUsage) ? data.otherCarUsage * 50 * emissionFactors.carType[data.carType] / 100000 : 0;
 
-    let emissionFlightsCalculated = 0;
-    if (data.flyingHabit === 'custom') {
-        emissionFlightsCalculated =
+    //flights
+    let emissionFlights = 0
+    if(typeof data.flyingHabit === 'string') emissionFactors.flyingHabit[data.flyingHabit];
+    if (data.flyingHabit === 'object') {
+        emissionFlights =
             emissionFactors.flyingAmount.domestic * data.flyingAmount.innerCountry +
             emissionFactors.flyingAmount.european * data.flyingAmount.european +
             emissionFactors.flyingAmount.intercontinental * data.flyingAmount.intercontinental;
@@ -252,9 +253,8 @@ const getEmissions = (req: any) => {
     console.log(emissionsCommute)
     console.log(emissionsOtherCarUsage)
     console.log(emissionFlights)
-    console.log(emissionFlightsCalculated)
 
-    allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights + emissionFlightsCalculated;
+    allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights;
 
     try {
         // Fetch tree absorption rates from the database and type the response correctly
