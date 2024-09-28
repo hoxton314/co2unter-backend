@@ -33,7 +33,7 @@ const tableExists = (tableName: string) => {
 };
 
 // Delete data if the table exists
-/*if (tableExists('parks')) {
+if (tableExists('parks')) {
     db.prepare('DELETE FROM parks').run();
 }
 
@@ -57,7 +57,7 @@ db.exec(`
         name TEXT NOT NULL,
         co2_absorbed_kgs REAL NOT NULL
     )
-`);*/
+`);
 
 const calculateCo2Absorption = (area: number): number => {
     const absorptionRate = 8.2; // tons of CO2 per hectare
@@ -143,7 +143,7 @@ interface EmissionInput {
     };
     diet: 'vegan' | 'mediterranean' | 'lessMeat' | 'everything';
     dailyCommute: 'walk' | 'cycle' | 'publicTransport' | 'carPool' | 'car';
-    otherCarUsage?: 'never' | 'rarely' | 'occasionally' | 'regularly' | 'custom';
+    otherCarUsage: number;
     otherCarUsageKm: number;
     typeOfCar?: 'electric' | 'gas' | 'diesel' | 'fuel';
     carSize: 'small' | 'regular' | 'suv' | 'semitruck';
@@ -221,7 +221,7 @@ app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res:
     const emissionsDiet = emissionFactors.diet[data.diet];
     const emissionsShopping = emissionFactors.shopping[data.shopping];
     const emissionsCommute = emissionFactors.dailyCommute[data.dailyCommute];
-    const emissionsOtherCarUsage = emissionFactors.otherCarUsage[data.otherCarUsage] * emissionFactors.carType[data.carType] / 100000;
+    const emissionsOtherCarUsage = data.otherCarUsage * 50 * emissionFactors.carType[data.carType] / 100000;
     const emissionFlights = emissionFactors.flyingHabit[data.flyingHabit];
 
     let emissionFlightsCalculated = 0;
