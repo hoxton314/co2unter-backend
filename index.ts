@@ -104,14 +104,14 @@ const fetchParkData = async () => {
         }
 
         // Map parks data
-        const parksData = parksResponse.data.value.map((park: any) => ({
+        const parksData = parksResponse.value.map((park: any) => ({
             name: park.Nazwa,
             area: park.Powierzchnia_ha,
             co2_absorbed_tons: calculateCo2Absorption(park.Powierzchnia_ha),
         }));
 
         // Map pocket parks data
-        const pocketParksData = pocketParksResponse.data.value.map((pocketPark: any) => ({
+        const pocketParksData = pocketParksResponse.value.map((pocketPark: any) => ({
             name: pocketPark.NAZWA,
             area: pocketPark.POW_HA,
             co2_absorbed_tons: calculateCo2Absorption(pocketPark.POW_HA),
