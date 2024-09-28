@@ -316,10 +316,36 @@ app.get('/parks', async (req: Request<{}, {}, EmissionInput>, res: Response) => 
 
 app.get('/events', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
     const events: any[] = db.prepare('SELECT name, date, location, co2_emissions FROM events').all();
+    const parks: any[] = db.prepare('SELECT name, area, co2_absorbed_tons FROM parks').all();
+
+    // Create extraEvents with the closest park for each event
+    const extraEvents = events.map(event => {
+        const eventEmissionsInTons = event.co2_emissions / 1000; // Convert kg to tons
+
+        // Find the closest park based on CO2 absorbed
+        const closestPark = parks.reduce((closest, park) => {
+            const parkEmissions = park.co2_absorbed_tons;
+            const currentDiff = Math.abs(parkEmissions - eventEmissionsInTons);
+
+            // If there's no closest park yet, or the current one is closer, update closest
+            if (!closest || currentDiff < Math.abs(closest.co2_absorbed_tons - eventEmissionsInTons)) {
+                return park;
+            }
+            return closest;
+        }, null);
+
+        // Return the event with the closest park included
+        return {
+            ...event,
+            park: closestPark,
+        };
+    });
+
     res.json({
-        events: events,
-    })
+        events: extraEvents,
+    });
 });
+
 
 app.use((_req: Request, res: Response) => {
     res.status(404).send("Not found");
