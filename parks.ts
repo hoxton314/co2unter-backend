@@ -1,4 +1,4 @@
-export const parkiMiejskie = data:{
+export const parkiMiejskie = {
     "value": [
         {
             "Lp": 1.0,
