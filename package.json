@@ -7,7 +7,10 @@
     "start": "npx tsx index.ts"
   },
   "dependencies": {
+    "@types/cors": "^2.8.17",
+    "axios": "^1.7.7",
     "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1"
   },
