@@ -54,15 +54,15 @@ const getTreeCategoryData = () => {
     return [
         {
             name: 'Old Tree',
-            co2_absorbed_kgs: 22 // tons
+            co2_absorbed_kgs: 22 // kgs
         },
         {
             name: 'Medium Tree',
-            co2_absorbed_kgs: 9 // tons (average)
+            co2_absorbed_kgs: 9 // kgs (average)
         },
         {
             name: 'Small Seedling',
-            co2_absorbed_kgs: 0.5 // ton (average)
+            co2_absorbed_kgs: 0.5 // kgs (average)
         }
     ];
 };
@@ -70,40 +70,50 @@ const getTreeCategoryData = () => {
 
 const fetchParkData = async () => {
     try {
+        // Delete old data before inserting new data
+        db.prepare('DELETE FROM parks').run();
+        db.prepare('DELETE FROM trees_absorption').run();
+
+        // Fetch data from APIs
         const parksResponse = await axios.get('https://api.um.krakow.pl/opendata-srodowisko-parki-miejskie/v1/parki-miejskie-powierzchnia');
         const pocketParksResponse = await axios.get('https://api.um.krakow.pl/opendata-srodowisko-parki-kieszonkowe/v1/parki-kieszonkowe-powierzchnia');
 
+        // Map parks data
         const parksData = parksResponse.data.value.map((park: any) => ({
             name: park.Nazwa,
             area: park.Powierzchnia_ha,
             co2_absorbed_tons: calculateCo2Absorption(park.Powierzchnia_ha),
         }));
 
+        // Map pocket parks data
         const pocketParksData = pocketParksResponse.data.value.map((pocketPark: any) => ({
             name: pocketPark.NAZWA,
             area: pocketPark.POW_HA,
             co2_absorbed_tons: calculateCo2Absorption(pocketPark.POW_HA),
         }));
 
+        // Combine both parks data sets
         const combinedData = [...parksData, ...pocketParksData];
-        const insert = db.prepare('INSERT INTO parks (name, area, co2_absorbed_tons) VALUES (?, ?, ?)');
+
+        // Prepare insertion into the 'parks' table
+        const insertParks = db.prepare('INSERT INTO parks (name, area, co2_absorbed_tons) VALUES (?, ?, ?)');
         for (const { name, area, co2_absorbed_tons } of combinedData) {
-            insert.run(name, area, co2_absorbed_tons);
+            insertParks.run(name, area, co2_absorbed_tons);
         }
 
+        // Fetch tree category data and insert into the 'trees_absorption' table
         const treeData = getTreeCategoryData();
-        const insertCo2Absorption = db.prepare('INSERT INTO trees_absorption (name, co2_absorbed_kgs) VALUES (?, ?)');
+        const insertTrees = db.prepare('INSERT INTO trees_absorption (name, co2_absorbed_kgs) VALUES (?, ?)');
         for (const { name, co2_absorbed_kgs } of treeData) {
-            insertCo2Absorption.run(name, co2_absorbed_kgs);
+            insertTrees.run(name, co2_absorbed_kgs);
         }
 
-        console.log('CO2 absorption data inserted successfully');
-
-        console.log('Data inserted successfully');
+        console.log('CO2 absorption data and park data inserted successfully');
     } catch (error) {
-        console.error('Error fetching park data:', error);
+        console.error('Error fetching or inserting park data:', error);
     }
 };
+
 
 // Call the fetch function
 fetchParkData();
@@ -138,14 +148,14 @@ type EmissionFactors = {
 };
 
 const emissionFactors: EmissionFactors = {
-    flying: {
+    flyingHabit: {
         rarely: 0.2,
         occasionally: 0.6,
         regularly: 3,
         custom: 0, // Custom will be handled below
     },
     flyingAmount: {
-        innerCountry: 0.1,
+        domestic: 0.1,
         european: 0.25,
         intercontinental: 2,
     },
@@ -163,16 +173,10 @@ const emissionFactors: EmissionFactors = {
     },
     otherCarUsage: {
         never: 0,
-        rarely: 1,
-        occasionally: 2,
-        regularly: 3,
+        rarely: 7000,
+        occasionally: 35000,
+        regularly: 87500,
         custom: 0,
-    },
-    clothing: {
-        never: 0,
-        rarely: 1,
-        occasionally: 2,
-        regularly: 3,
     },
     housing: {
         studio: 2,
@@ -185,27 +189,68 @@ const emissionFactors: EmissionFactors = {
         rarely: 0.34,
         occasionally: 0.86,
         regularly: 1.26,
-    }
+    },
+    carType: {
+      electric: 15 * 0.68,
+      gas: 16,
+      diesel: 19,
+      fuel: 20,
+    },
 };
 
-app.post('/calculate-emission', (req: Request<{}, {}, EmissionInput>, res: Response) => {
+app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
     const data: any = req.body;
 
     let allEmissions = 0;
 
     // housing emissions
-    const emissionsHousing = emissionFactors.housing[data.housing] / data.inhabitants
-    const emissionsElectricity = data.electricityUsage * 0.72 * 365
-    const emissionsDiet = emissionFactors.diet[data.diet]
-    const emissionsShopping = emissionFactors.shopping[data.shopping]
-    const emissionsCommute = emissionFactors.dailyCommute[data.dailyCommute]
-    const emissionsOtherCarUsage = emissionFactors.otherCarUsage[data.otherCarUsage]
+    const emissionsHousing = emissionFactors.housing[data.housing] / data.inhabitants;
+    const emissionsElectricity = data.electricityUsage * 0.72 * 365 / 1000;
+    const emissionsDiet = emissionFactors.diet[data.diet];
+    const emissionsShopping = emissionFactors.shopping[data.shopping];
+    const emissionsCommute = emissionFactors.dailyCommute[data.dailyCommute];
+    const emissionsOtherCarUsage = emissionFactors.otherCarUsage[data.otherCarUsage] * emissionFactors.carType[data.carType] / 100000;
+    const emissionFlights = emissionFactors.flyingHabit[data.flyingHabit];
 
+    let emissionFlightsCalculated = 0;
+    if (data.flyingHabit === 'custom') {
+        emissionFlightsCalculated =
+            emissionFactors.flyingAmount.domestic * data.flyingAmount.innerCountry +
+            emissionFactors.flyingAmount.european * data.flyingAmount.european +
+            emissionFactors.flyingAmount.intercontinental * data.flyingAmount.intercontinental;
+    }
 
-    allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage
+    console.log(emissionsHousing)
+    console.log(emissionsElectricity)
+    console.log(emissionsDiet)
+    console.log(emissionsShopping)
+    console.log(emissionsCommute)
+    console.log(emissionsOtherCarUsage)
+    console.log(emissionFlights)
+    console.log(emissionFlightsCalculated)
 
-    // Send the response back
-    res.json({ allEmissions });
+    allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights + emissionFlightsCalculated;
+
+    try {
+        // Fetch tree absorption rates from the database and type the response correctly
+        const treeAbsorptionRates: any[] = db.prepare('SELECT name, co2_absorbed_kgs FROM trees_absorption').all();
+
+        console.log(treeAbsorptionRates)
+        const oldTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Old Tree').co2_absorbed_kgs
+        const mediumTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Medium Tree').co2_absorbed_kgs
+        const smallTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Small Seedling').co2_absorbed_kgs
+
+        // Send the response back including total emissions and trees required
+        res.send({
+            oldTreesAbsorption: allEmissions * 1000 / oldTreeAbsorption,
+            mediumTreeAbsorption: allEmissions * 1000 / mediumTreeAbsorption,
+            smallTreeAbsorption: allEmissions * 1000 / smallTreeAbsorption,
+            totalEmissions: allEmissions, // in tons
+        });
+    } catch (error) {
+        console.error('Error fetching tree data:', error);
+        res.status(500).json({ error: 'Error calculating tree absorption' });
+    }
 });
 
 app.use((_req: Request, res: Response) => {
