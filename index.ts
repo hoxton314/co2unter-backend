@@ -33,7 +33,7 @@ const tableExists = (tableName: string) => {
 };
 
 // Delete data if the table exists
-if (tableExists('parks')) {
+/*if (tableExists('parks')) {
     db.prepare('DELETE FROM parks').run();
 }
 
@@ -57,7 +57,7 @@ db.exec(`
         name TEXT NOT NULL,
         co2_absorbed_kgs REAL NOT NULL
     )
-`);
+`);*/
 
 const calculateCo2Absorption = (area: number): number => {
     const absorptionRate = 8.2; // tons of CO2 per hectare
