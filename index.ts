@@ -88,7 +88,6 @@ const getTreeCategoryData = () => {
 
 const fetchParkData = async () => {
     try {
-        console.log('park2!!!!')
 
         let parksResponse
         let pocketParksResponse
@@ -103,9 +102,6 @@ const fetchParkData = async () => {
             pocketParksResponse = ParkiKieszonkowe
         }
 
-        // Map parks data
-        console.log(parksResponse)
-        console.log(pocketParksResponse)
         const parksData = parksResponse.value.map((park: any) => ({
             name: park.Nazwa,
             area: park.Powierzchnia_ha,
@@ -259,7 +255,6 @@ const getEmissions = (req: any) => {
         // Fetch tree absorption rates from the database and type the response correctly
         const treeAbsorptionRates: any[] = db.prepare('SELECT name, co2_absorbed_kgs FROM trees_absorption').all();
 
-        console.log(treeAbsorptionRates)
         const oldTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Old Tree').co2_absorbed_kgs
         const mediumTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Medium Tree').co2_absorbed_kgs
         const smallTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Small Seedling').co2_absorbed_kgs
