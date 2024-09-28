@@ -223,6 +223,7 @@ const getEmissions = (req: any) => {
 
     let allEmissions = 0;
 
+    console.log(req.body)
     // housing emissions
     const emissionsHousing = (data.household && data.inhabitants) ? emissionFactors.household[data.household] / data.inhabitants : 0;
     const emissionsElectricity = data.electricityUsage ? (data.electricityUsage * 0.72 * 365 / 1000) : 0;
