@@ -26,6 +26,9 @@ app.use(cors(corsOptions));
 // Open SQLite database
 const db = new Database('./database.db', { verbose: console.log });
 
+db.prepare('DELETE FROM parks').run();
+db.prepare('DELETE FROM trees_absorption').run();
+
 // Create a table if it doesn't exist
 db.exec(`
     CREATE TABLE IF NOT EXISTS parks (
@@ -70,9 +73,6 @@ const getTreeCategoryData = () => {
 
 const fetchParkData = async () => {
     try {
-        // Delete old data before inserting new data
-        db.prepare('DELETE FROM parks').run();
-        db.prepare('DELETE FROM trees_absorption').run();
 
         // Fetch data from APIs
         const parksResponse = await axios.get('https://api.um.krakow.pl/opendata-srodowisko-parki-miejskie/v1/parki-miejskie-powierzchnia');
@@ -258,5 +258,5 @@ app.use((_req: Request, res: Response) => {
 });
 
 app.listen(port, () => {
-    console.log(`[server]: Server is running at http://localhost:${port}`);
+    console.log(`[server]: Server is running at PORT: ${port}`);
 });
