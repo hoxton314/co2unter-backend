@@ -119,16 +119,12 @@ const fetchParkData = async () => {
         for (const { name, co2_absorbed_kgs } of treeData) {
             insertTrees.run(name, co2_absorbed_kgs);
         }
-
         console.log('CO2 absorption data and park data inserted successfully');
     } catch (error) {
         console.error('Error fetching or inserting park data:', error);
     }
 };
 
-
-// Call the fetch function
-fetchParkData();
 
 app.get('/', (_req: Request, _res: Response) => {
     _res.send('Testowa aplikacja na hackaton!');
@@ -284,5 +280,6 @@ app.use((_req: Request, res: Response) => {
 });
 
 app.listen(port, () => {
+    fetchParkData();
     console.log(`[server]: Server is running at PORT: ${port}`);
 });
