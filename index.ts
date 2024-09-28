@@ -3,13 +3,17 @@ import dotenv from 'dotenv';
 import Database from 'better-sqlite3';
 import cors from 'cors';
 import axios from 'axios';
-
+import bodyParser from 'body-parser';
 
 dotenv.config();
 
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(bodyParser.json());
+
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const corsOptions = {
     origin: 'https://co2unter.hoxton.dev',
@@ -45,11 +49,6 @@ const calculateCo2Absorption = (area: number): number => {
     return area * absorptionRate;
 };
 
-
-
-app.get('/', (_req: Request, _res: Response) => {
-    _res.send('Express + TypeScript + SQLite Server');
-});
 
 const getTreeCategoryData = () => {
     return [
@@ -108,6 +107,30 @@ const fetchParkData = async () => {
 
 // Call the fetch function
 fetchParkData();
+
+app.get('/', (_req: Request, _res: Response) => {
+    _res.send('Express + TypeScript + SQLite Server');
+});
+
+app.post('/calculate-emission', (_req: Request, _res: Response) => {
+    console.log(_req.body)
+    /*
+
+    mock data
+    {
+        transportKm: {
+            car: 20,
+            bus: 30,
+            tram: 60,
+            walk: 10,
+            bike: 30,
+        }
+        diet: meditterenian,
+        houseHold
+    }
+     */
+    _res.send('Express + TypeScript + SQLite Server');
+});
 
 app.use((_req: Request, res: Response) => {
     res.status(404).send("Not found");
