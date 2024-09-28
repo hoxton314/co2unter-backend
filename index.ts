@@ -26,8 +26,20 @@ app.use(cors(corsOptions));
 // Open SQLite database
 const db = new Database('./database.db', { verbose: console.log });
 
-db.prepare('DELETE FROM parks').run();
-db.prepare('DELETE FROM trees_absorption').run();
+const tableExists = (tableName: string) => {
+    const query = `SELECT name FROM sqlite_master WHERE type='table' AND name=?`;
+    const result = db.prepare(query).get(tableName);
+    return !!result; // Returns true if the table exists, false otherwise
+};
+
+// Delete data if the table exists
+if (tableExists('parks')) {
+    db.prepare('DELETE FROM parks').run();
+}
+
+if (tableExists('trees_absorption')) {
+    db.prepare('DELETE FROM trees_absorption').run();
+}
 
 // Create a table if it doesn't exist
 db.exec(`
