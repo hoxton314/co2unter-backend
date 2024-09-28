@@ -87,10 +87,12 @@ const fetchParkData = async () => {
     console.log('park!!!!')
 
     try {
+        console.log('park2!!!!')
 
         // Fetch data from APIs
         const parksResponse = await axios.get('https://api.um.krakow.pl/opendata-srodowisko-parki-miejskie/v1/parki-miejskie-powierzchnia');
         const pocketParksResponse = await axios.get('https://api.um.krakow.pl/opendata-srodowisko-parki-kieszonkowe/v1/parki-kieszonkowe-powierzchnia');
+        console.log('park3!!!!')
 
         // Map parks data
         const parksData = parksResponse.data.value.map((park: any) => ({
