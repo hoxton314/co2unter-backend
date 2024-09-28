@@ -265,6 +265,13 @@ app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res:
     }
 });
 
+app.get('/trees', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+    const trees: any[] = db.prepare('SELECT name, co2_absorbed_kgs FROM trees_absorption').all();
+    res.json({
+        trees: trees,
+    })
+});
+
 app.use((_req: Request, res: Response) => {
     res.status(404).send("Not found");
 });
