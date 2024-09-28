@@ -1005,3 +1005,38 @@ export const ParkiKieszonkowe = {
         }
     ]
 }
+
+export const Events = {
+    "events": [
+        {
+            "name": "Koncert Muzyki Klasycznej",
+            "date": "2024-10-15",
+            "location": "Kraków, Filharmonia",
+            "co2_emissions": 2000.5
+        },
+        {
+            "name": "Festyn Rodzinny",
+            "date": "2024-11-05",
+            "location": "Kraków, Park Jordana",
+            "co2_emissions": 1500.0
+        },
+        {
+            "name": "Konferencja Technologiczna",
+            "date": "2024-12-01",
+            "location": "Kraków, Centrum Kongresowe",
+            "co2_emissions": 3000.75
+        },
+        {
+            "name": "Bieg Charytatywny",
+            "date": "2024-11-20",
+            "location": "Kraków, Błonia",
+            "co2_emissions": 750.2
+        },
+        {
+            "name": "Festiwal Filmowy",
+            "date": "2024-10-25",
+            "location": "Kraków, Kino Nowe Horyzonty",
+            "co2_emissions": 1200.0
+        }
+    ]
+}

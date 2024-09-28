@@ -4,7 +4,7 @@ import Database from 'better-sqlite3';
 import cors from 'cors';
 import axios from 'axios';
 import bodyParser from 'body-parser';
-import {parkiMiejskie, ParkiKieszonkowe} from './parks'
+import {parkiMiejskie, ParkiKieszonkowe, Events} from './parks'
 dotenv.config();
 
 
@@ -44,6 +44,10 @@ if (tableExists('trees_absorption')) {
     db.prepare('DELETE FROM trees_absorption').run();
 }
 
+if (tableExists('events')) {
+    db.prepare('DELETE FROM events').run();
+}
+
 // Create a table if it doesn't exist
 db.exec(`
     CREATE TABLE IF NOT EXISTS parks (
@@ -61,6 +65,17 @@ db.exec(`
         co2_absorbed_kgs REAL NOT NULL
     )
 `);
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        date TEXT NOT NULL,
+        location TEXT NOT NULL,
+        co2_emissions REAL NOT NULL
+    )
+`);
+
 
 const calculateCo2Absorption = (area: number): number => {
     const absorptionRate = 8.2; // tons of CO2 per hectare
@@ -129,6 +144,12 @@ const fetchParkData = async () => {
         const insertTrees = db.prepare('INSERT INTO trees_absorption (name, co2_absorbed_kgs) VALUES (?, ?)');
         for (const { name, co2_absorbed_kgs } of treeData) {
             insertTrees.run(name, co2_absorbed_kgs);
+        }
+
+        const events = Events.events
+        const insertEvents = db.prepare('INSERT INTO events (name, date, location, co2_emissions) VALUES (?, ?, ?, ?)');
+        for (const { name, date, location, co2_emissions } of events) {
+            insertEvents.run(name, date, location, co2_emissions);
         }
         console.log('CO2 absorption data and park data inserted successfully');
     } catch (error) {
@@ -273,11 +294,6 @@ const getEmissions = (req: any) => {
     }
 }
 
-app.get('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
-    const response = getEmissions(req)
-    res.send(response)
-});
-
 app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
     const response = getEmissions(req)
     res.send(response)
@@ -294,6 +310,14 @@ app.get('/parks', async (req: Request<{}, {}, EmissionInput>, res: Response) => 
     const parks: any[] = db.prepare('SELECT name, area, co2_absorbed_tons FROM parks').all();
     res.json({
         parks: parks,
+    })
+});
+
+
+app.get('/events', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+    const events: any[] = db.prepare('SELECT name, date, location, co2_emissions FROM events').all();
+    res.json({
+        events: events,
     })
 });
 
