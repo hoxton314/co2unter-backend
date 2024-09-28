@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const corsOptions = {
     origin: 'https://co2unter.hoxton.dev',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // If you need to allow cookies or authorization headers
+    credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -109,27 +109,103 @@ const fetchParkData = async () => {
 fetchParkData();
 
 app.get('/', (_req: Request, _res: Response) => {
-    _res.send('Express + TypeScript + SQLite Server');
+    _res.send('Testowa aplikacja na hackaton!');
 });
 
-app.post('/calculate-emission', (_req: Request, _res: Response) => {
-    console.log(_req.body)
-    /*
+interface EmissionInput {
+    flyingHabits: 'rarely' | 'occasionally' | 'regularly' | 'custom';
+    flyingAmount?: {
+        innerCountry: number;
+        european: number;
+        intercontinental: number;
+    };
+    diet: 'vegan' | 'mediterranean' | 'lessMeat' | 'everything';
+    dailyCommute: 'walk' | 'cycle' | 'publicTransport' | 'carPool' | 'car';
+    otherCarUsage?: 'never' | 'rarely' | 'occasionally' | 'regularly' | 'custom';
+    otherCarUsageKm: number;
+    typeOfCar?: 'electric' | 'gas' | 'diesel' | 'fuel';
+    carSize: 'small' | 'regular' | 'suv' | 'semitruck';
+    newClothesConsumption: 'never' | 'rarely' | 'occasionally' | 'regularly';
+    houseHold: 'flat' | 'detached' | 'singleFamily';
+    rooms: number;
+    inhabitants: number;
+}
 
-    mock data
-    {
-        transportKm: {
-            car: 20,
-            bus: 30,
-            tram: 60,
-            walk: 10,
-            bike: 30,
-        }
-        diet: meditterenian,
-        houseHold
+type EmissionFactors = {
+    [key: string]: {
+        [key: string]: number
+    };
+};
+
+const emissionFactors: EmissionFactors = {
+    flying: {
+        rarely: 0.2,
+        occasionally: 0.6,
+        regularly: 3,
+        custom: 0, // Custom will be handled below
+    },
+    flyingAmount: {
+        innerCountry: 0.1,
+        european: 0.25,
+        intercontinental: 2,
+    },
+    diet: {
+        vegan: 0.255,
+        mediterranean: 0.37,
+        lessMeat: 0.55,
+        everything: 1,
+    },
+    dailyCommute: {
+        walk: 0,
+        cycle: 0,
+        publicTransport: 0.1,
+        car: 0.6,
+    },
+    otherCarUsage: {
+        never: 0,
+        rarely: 1,
+        occasionally: 2,
+        regularly: 3,
+        custom: 0,
+    },
+    clothing: {
+        never: 0,
+        rarely: 1,
+        occasionally: 2,
+        regularly: 3,
+    },
+    housing: {
+        studio: 2,
+        oneBedroom: 2.75,
+        twoBedroom: 3.5,
+        threeBedroom: 4.3,
+    },
+    shopping: {
+        never: 0.01,
+        rarely: 0.34,
+        occasionally: 0.86,
+        regularly: 1.26,
     }
-     */
-    _res.send('Express + TypeScript + SQLite Server');
+};
+
+app.post('/calculate-emission', (req: Request<{}, {}, EmissionInput>, res: Response) => {
+    const data: any = req.body;
+
+    let allEmissions = 0;
+
+    // housing emissions
+    const emissionsHousing = emissionFactors.housing[data.housing] / data.inhabitants
+    const emissionsElectricity = data.electricityUsage * 0.72 * 365
+    const emissionsDiet = emissionFactors.diet[data.diet]
+    const emissionsShopping = emissionFactors.shopping[data.shopping]
+    const emissionsCommute = emissionFactors.dailyCommute[data.dailyCommute]
+    const emissionsOtherCarUsage = emissionFactors.otherCarUsage[data.otherCarUsage]
+
+
+    allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage
+
+    // Send the response back
+    res.json({ allEmissions });
 });
 
 app.use((_req: Request, res: Response) => {
