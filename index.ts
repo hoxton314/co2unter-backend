@@ -281,8 +281,45 @@ const getEmissions = (req: any) => {
 }
 
 app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
-    const response = getEmissions(req)
-    res.send(response)
+    const data: any = req.body;
+
+    let allEmissions = 0;
+
+    console.log(req.body)
+    // housing emissions
+    const emissionsHousing = (data.household && data.inhabitants) ? emissionFactors.household[data.household] / data.inhabitants : 0;
+    const emissionsElectricity = data.electricityUsage ? (data.electricityUsage * 0.72 * 365 / 1000) : 0;
+    const emissionsDiet = data.diet ? emissionFactors.diet[data.diet] : 0;
+    const emissionsShopping = data.shopping ? emissionFactors.shopping[data.shopping] : 0;
+    const emissionsCommute = data.dailyCommute ? emissionFactors.dailyCommute[data.dailyCommute] : 0;
+    const emissionsOtherCarUsage = (data.carType && data.otherCarUsage) ? data.otherCarUsage * 50 * emissionFactors.carType[data.carType] / 100000 : 0;
+
+    const emissionFlights = data.flyingHabit ? emissionFactors.flyingHabit[data.flyingHabit] : 0;
+
+    allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights;
+
+    try {
+        // Fetch tree absorption rates from the database and type the response correctly
+        const treeAbsorptionRates: any[] = db.prepare('SELECT name, co2_absorbed_kgs FROM trees_absorption').all();
+
+        const oldTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Old Tree').co2_absorbed_kgs
+        const mediumTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Medium Tree').co2_absorbed_kgs
+        const smallTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Small Seedling').co2_absorbed_kgs
+
+        if(!allEmissions) {
+            res.status(500).send("Error")
+        }
+        // Send the response back including total emissions and trees required
+        res.status(200).send({
+            oldTreesAbsorption: allEmissions * 1000 / oldTreeAbsorption,
+            mediumTreeAbsorption: allEmissions * 1000 / mediumTreeAbsorption,
+            seedlingAbsorption: allEmissions * 1000 / smallTreeAbsorption,
+            totalEmissions: allEmissions, // in tons
+        })
+    } catch (error) {
+        console.error('Error fetching tree data:', error);
+        res.status(500).send({ error: 'Error calculating tree absorption' })
+    }
 });
 
 app.get('/trees', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
