@@ -4,6 +4,7 @@ import Database from 'better-sqlite3';
 import cors from 'cors';
 import axios from 'axios';
 import bodyParser from 'body-parser';
+import { body, validationResult } from 'express-validator';
 import {parkiMiejskie, ParkiKieszonkowe, Events, TransportShare} from './parks'
 dotenv.config();
 
@@ -275,7 +276,23 @@ const getEmissions = (req: any) => {
     }
 }
 
-app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+const validateEmissionInput = [
+    body('household').notEmpty().withMessage('Household is required'),
+    body('inhabitants').isInt({ min: 1 }).withMessage('Inhabitants must be a positive integer'),
+    body('electricityUsage').isFloat({ min: 0 }).withMessage('Electricity usage must be a non-negative number'),
+    body('diet').notEmpty().withMessage('Diet is required'),
+    body('shopping').notEmpty().withMessage('Shopping frequency is required'),
+    body('dailyCommute').notEmpty().withMessage('Daily commute is required'),
+    body('carType').notEmpty().withMessage('Car type is required'),
+    body('otherCarUsage').isFloat({ min: 0 }).withMessage('Other car usage must be a non-negative number'),
+    body('flyingHabit').notEmpty().withMessage('Flying habit is required')
+]
+
+app.post('/calculate-emission', validateEmissionInput, async (req: Request<{}, {}, EmissionInput>, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const data: any = req.body;
 
