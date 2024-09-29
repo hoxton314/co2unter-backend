@@ -53,7 +53,7 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS parks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        area TEXT NOT NULL,
+        area REAL NOT NULL,
         co2_absorbed_tons REAL
     )
 `);
