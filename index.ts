@@ -276,24 +276,25 @@ const getEmissions = (req: any) => {
 }
 
 app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res: Response) => {
-    const data: any = req.body;
-
-    let allEmissions = 0;
-
-    console.log(req.body)
-    // housing emissions
-    const emissionsHousing = (data.household && data.inhabitants) ? emissionFactors.household[data.household] / data.inhabitants : 0;
-    const emissionsElectricity = data.electricityUsage ? (data.electricityUsage * 0.72 * 365 / 1000) : 0;
-    const emissionsDiet = data.diet ? emissionFactors.diet[data.diet] : 0;
-    const emissionsShopping = data.shopping ? emissionFactors.shopping[data.shopping] : 0;
-    const emissionsCommute = data.dailyCommute ? emissionFactors.dailyCommute[data.dailyCommute] : 0;
-    const emissionsOtherCarUsage = (data.carType && data.otherCarUsage) ? data.otherCarUsage * 5 * emissionFactors.carType[data.carType] / 100000 : 0;
-
-    const emissionFlights = data.flyingHabit ? emissionFactors.flyingHabit[data.flyingHabit] : 0;
-
-    allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights;
-
     try {
+        const data: any = req.body;
+
+        let allEmissions = 0;
+
+        console.log(req.body)
+        // housing emissions
+        const emissionsHousing = (data.household && data.inhabitants) ? emissionFactors.household[data.household] / data.inhabitants : 0;
+        const emissionsElectricity = data.electricityUsage ? (data.electricityUsage * 0.72 * 365 / 1000) : 0;
+        const emissionsDiet = data.diet ? emissionFactors.diet[data.diet] : 0;
+        const emissionsShopping = data.shopping ? emissionFactors.shopping[data.shopping] : 0;
+        const emissionsCommute = data.dailyCommute ? emissionFactors.dailyCommute[data.dailyCommute] : 0;
+        const emissionsOtherCarUsage = (data.carType && data.otherCarUsage) ? data.otherCarUsage * 5 * emissionFactors.carType[data.carType] / 100000 : 0;
+
+        const emissionFlights = data.flyingHabit ? emissionFactors.flyingHabit[data.flyingHabit] : 0;
+
+        allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights;
+
+
         // Fetch tree absorption rates from the database and type the response correctly
         const treeAbsorptionRates: any[] = db.prepare('SELECT name, co2_absorbed_kgs FROM trees_absorption').all();
 
