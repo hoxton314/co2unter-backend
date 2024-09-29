@@ -209,6 +209,7 @@ const emissionFactors: EmissionFactors = {
     dailyCommute: {
         walk: 0,
         cycle: 0,
+        footAndCycle: 0,
         publicTransport: 0.1,
         carPooling: 0.2,
         car: 0.6,
