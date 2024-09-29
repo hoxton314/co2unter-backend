@@ -300,16 +300,31 @@ app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res:
         const oldTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Old Tree').co2_absorbed_kgs
         const mediumTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Medium Tree').co2_absorbed_kgs
         const smallTreeAbsorption = treeAbsorptionRates.find(e => e.name === 'Small Seedling').co2_absorbed_kgs
+        const parks: any[] = db.prepare('SELECT name, co2_absorbed_tons FROM parks').all();
+
 
         if(!allEmissions) {
             res.status(500).send("Error")
         }
+
+        const closestPark = parks.reduce((closest, park) => {
+            const parkEmissions = park.co2_absorbed_tons;
+            const currentDiff = Math.abs(parkEmissions - (allEmissions / 1000)); // Convert emissions to tons
+
+            // If there's no closest park yet, or the current one is closer, update closest
+            if (!closest || currentDiff < Math.abs(closest.co2_absorbed_tons - (allEmissions / 1000))) {
+                return park;
+            }
+            return closest;
+        }, null);
+
         // Send the response back including total emissions and trees required
         res.status(200).send({
             oldTreesAbsorption: allEmissions * 1000 / oldTreeAbsorption,
             mediumTreeAbsorption: allEmissions * 1000 / mediumTreeAbsorption,
             seedlingAbsorption: allEmissions * 1000 / smallTreeAbsorption,
             totalEmissions: allEmissions, // in tons
+            closestPark: closestPark // Include the closest park
         })
     } catch (error) {
         console.error('Error fetching tree data:', error);
@@ -372,8 +387,6 @@ app.get('/sectors', async (req: Request, res: Response) => {
 
     const totalEmissionsCount = totalEmissions.reduce((sum, transport) => sum + transport.emissions, 0);
 
-
-    // uslugi
 
     const hotelEmissions = population * 10
     const disposableEmissions = population * 0.5
