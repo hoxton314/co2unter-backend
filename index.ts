@@ -309,10 +309,10 @@ app.post('/calculate-emission', async (req: Request<{}, {}, EmissionInput>, res:
 
         const closestPark = parks.reduce((closest, park) => {
             const parkEmissions = park.co2_absorbed_tons;
-            const currentDiff = Math.abs(parkEmissions - (allEmissions / 1000)); // Convert emissions to tons
+            const currentDiff = Math.abs(parkEmissions - allEmissions); // Both in tons per year
 
             // If there's no closest park yet, or the current one is closer, update closest
-            if (!closest || currentDiff < Math.abs(closest.co2_absorbed_tons - (allEmissions / 1000))) {
+            if (!closest || currentDiff < Math.abs(closest.co2_absorbed_tons - allEmissions)) {
                 return park;
             }
             return closest;
