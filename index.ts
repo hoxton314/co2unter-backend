@@ -254,15 +254,7 @@ const getEmissions = (req: any) => {
     const emissionsCommute = data.dailyCommute ? emissionFactors.dailyCommute[data.dailyCommute] : 0;
     const emissionsOtherCarUsage = (data.carType && data.otherCarUsage) ? data.otherCarUsage * 50 * emissionFactors.carType[data.carType] / 100000 : 0;
 
-    //flights
-    let emissionFlights = 0
-    if(typeof data.flyingHabit === 'string') emissionFactors.flyingHabit[data.flyingHabit];
-    if (data.flyingHabit === 'object') {
-        emissionFlights =
-            emissionFactors.flyingAmount.domestic * data.flyingAmount.innerCountry +
-            emissionFactors.flyingAmount.european * data.flyingAmount.european +
-            emissionFactors.flyingAmount.intercontinental * data.flyingAmount.intercontinental;
-    }
+    const emissionFlights = data.flyingHabit ? emissionFactors.flyingHabit[data.flyingHabit] : 0;
 
     allEmissions = emissionsHousing + emissionsElectricity + emissionsDiet + emissionsShopping + emissionsCommute + emissionsOtherCarUsage + emissionFlights;
 
