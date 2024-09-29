@@ -171,7 +171,7 @@ interface EmissionInput {
         european: number;
         intercontinental: number;
     };
-    diet: 'vegan' | 'mediterranean' | 'lessMeat' | 'everything';
+    diet: 'vegan' | 'mediterranean' | 'lowMeat' | 'everything';
     dailyCommute: 'walk' | 'cycle' | 'publicTransport' | 'carPool' | 'car';
     otherCarUsage: number;
     otherCarUsageKm: number;
@@ -195,15 +195,10 @@ const emissionFactors: EmissionFactors = {
         occasionally: 0.6,
         regularly: 3,
     },
-    flyingAmount: {
-        domestic: 0.1,
-        european: 0.25,
-        intercontinental: 2,
-    },
     diet: {
         vegan: 0.255,
         mediterranean: 0.37,
-        lessMeat: 0.55,
+        lowMeat: 0.55,
         everything: 1,
     },
     dailyCommute: {
@@ -211,7 +206,7 @@ const emissionFactors: EmissionFactors = {
         cycle: 0,
         footAndCycle: 0,
         publicTransport: 0.1,
-        carPooling: 0.2,
+        carpooling: 0.2,
         car: 0.6,
     },
     otherCarUsage: {
