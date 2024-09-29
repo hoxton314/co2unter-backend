@@ -248,7 +248,7 @@ const getEmissions = (req: any) => {
     const emissionsDiet = data.diet ? emissionFactors.diet[data.diet] : 0;
     const emissionsShopping = data.shopping ? emissionFactors.shopping[data.shopping] : 0;
     const emissionsCommute = data.dailyCommute ? emissionFactors.dailyCommute[data.dailyCommute] : 0;
-    const emissionsOtherCarUsage = (data.carType && data.otherCarUsage) ? data.otherCarUsage * 50 * emissionFactors.carType[data.carType] / 100000 : 0;
+    const emissionsOtherCarUsage = (data.carType && data.otherCarUsage) ? data.otherCarUsage * 50 * emissionFactors.carType[data.carType] / 1000000 : 0;
 
     const emissionFlights = data.flyingHabit ? emissionFactors.flyingHabit[data.flyingHabit] : 0;
 
